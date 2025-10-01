@@ -1,21 +1,20 @@
 const express = require("express");
-const dotenv = require("dotenv");
-const cors = require("cors");
+const connectdb = require("./config/db.js");
+const router = require("./routes/personRoutes.js");
 
-dotenv.config();
+connectdb();
+require("dotenv").config();
 
 const app = express();
 
-// middleware
-app.use(cors());
 app.use(express.json());
 
-// simple route
+app.use("/api/person", router);
+
 app.get("/", (req, res) => {
-  res.send("Hello from server 🚀");
+  res.end("<h1>HELLO from postman</h1>");
 });
 
-// use PORT from .env or fallback
 const PORT = process.env.PORT;
 
 app.listen(PORT, () => {
