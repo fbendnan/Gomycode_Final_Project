@@ -1,4 +1,4 @@
-const express = require("express");
+const express = require("express")
 const connectdb = require("./config/db.js");
 const router = require("./routes/personRoutes.js");
 
@@ -12,7 +12,7 @@ app.use(express.json());
 app.use("/api/person", router);
 
 app.get("/", (req, res) => {
-  res.end("<h1>HELLO from postman</h1>");
+  res.end("<h1>HELLO from backend</h1>");
 });
 
 const PORT = process.env.PORT;
