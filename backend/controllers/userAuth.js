@@ -1,10 +1,11 @@
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 const User = require("../models/user.js");
+require("dotenv").config()
 
 const registerUser = async (req, res) => {
   try {
-    const { name, email, password } = req.body;
+    const { name, email, password, role, addresses } = req.body;
 
     if (!name || !email || !password) {
       return res
@@ -23,6 +24,8 @@ const registerUser = async (req, res) => {
       name,
       email,
       password: passHashed,
+      role: role || "user",        // default user
+      addresses: addresses || []   // optional
     });
 
     res.status(201).json({
@@ -31,16 +34,19 @@ const registerUser = async (req, res) => {
         _id: newUser._id,
         name: newUser.name,
         email: newUser.email,
+        role: newUser.role,
+        addresses: newUser.addresses
       },
     });
   } catch (error) {
-    console.error("❌ Error during user registration:", error);
+    console.error(" Error during user registration:", error);
     if (error.code === 11000) {
       return res.status(400).json({ message: "Email must be unique" });
     }
     res.status(500).json({ message: "Server error" });
   }
 };
+
 
 const loginUser = async (req, res) => {
   try {
@@ -67,7 +73,7 @@ const loginUser = async (req, res) => {
       token 
     });
   } catch (error) {
-    console.log("❌ Error at login:", error);
+    console.log("Error at login:", error);
     res.status(500).json({ message: "Server error" });
   }
 };
