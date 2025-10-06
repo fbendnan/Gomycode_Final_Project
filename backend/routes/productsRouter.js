@@ -8,8 +8,6 @@ const {
 
 const productsRouter = express.Router();
 
-// 🛒 Routes for Products
-
 // Get all products
 productsRouter.get("/", getProducts);
 
