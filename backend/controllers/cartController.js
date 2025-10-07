@@ -5,7 +5,7 @@ const userID = "68e3f81b770e6ef1f0c8b6e7";
 // Get cart for logged-in user
 const getCart = async (req, res) => {
   try {
-    
+
     const cart = await Cart.findOne({ user: userID }).populate("products.product");
     if (!cart) return res.json({ items: [] });
     res.json(cart);
@@ -18,7 +18,7 @@ const getCart = async (req, res) => {
 const addToCart = async (req, res) => {
   try {
     const { productId, quantity } = req.body;
-    
+
 
     let cart = await Cart.findOne({ user: userID });
 
@@ -67,5 +67,21 @@ const removeFromCart = async (req, res) => {
     res.status(500).json({ message: error.message });
   }
 };
+// In cartController.js
+const clearCart = async (req, res) => {
+  try {
+    // Use the hardcoded userID like in other cart functions
+    const cart = await Cart.findOne({ user: userID });
+    if (!cart) {
+      return res.status(404).json({ message: "Cart not found" });
+    }
 
-module.exports = { getCart, addToCart, removeFromCart };
+    cart.products = [];
+    await cart.save();
+
+    res.json({ message: "Cart cleared successfully" });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+module.exports = { getCart, addToCart, removeFromCart, clearCart };

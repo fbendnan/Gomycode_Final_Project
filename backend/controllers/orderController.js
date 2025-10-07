@@ -7,21 +7,44 @@ const userID = "68e3f81b770e6ef1f0c8b6e7";
 // Create an order
 const createOrder = async (req, res) => {
   try {
-    const cart = await Cart.findOne({ user: userID }).populate("products.product");
+    const cart = await Cart.findOne({ user: userID }).populate({
+      path: 'products.product',
+      model: 'Product'
+    });
 
-    if (!cart || cart.products.length === 0) {
+    if (!cart) {
+      return res.status(400).json({ message: "Cart not found" });
+    }
+
+    if (cart.products.length === 0) {
       return res.status(400).json({ message: "Cart is empty" });
     }
 
-    // Calculate total price
-    const totalPrice = cart.products.reduce(
-      (acc, item) => acc + item.product.price * item.quantity,
-      0
-    );
+    // Debug: Log cart products to check population
+    console.log("Cart products:", cart.products);
+
+    // Calculate total price with validation
+    const totalPrice = cart.products.reduce((acc, item) => {
+      if (!item.product) {
+        console.error("Product not found for item:", item);
+        return acc;
+      }
+      if (typeof item.product.price !== 'number') {
+        console.error("Invalid price for product:", item.product);
+        return acc;
+      }
+      return acc + (item.product.price * item.quantity);
+    }, 0);
 
     const { paymentMethod, shippingAddress } = req.body;
 
-    // Create order
+    // Create order with validation
+    if (!paymentMethod || !shippingAddress) {
+      return res.status(400).json({
+        message: "Payment method and shipping address are required"
+      });
+    }
+
     const order = await Order.create({
       user: userID,
       products: cart.products.map((item) => ({
@@ -39,10 +62,13 @@ const createOrder = async (req, res) => {
 
     res.status(201).json({ message: "Order created successfully", order });
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    console.error("Error creating order:", error);
+    res.status(500).json({
+      message: "Error creating order",
+      error: error.message
+    });
   }
 };
-
 // Get all orders for the logged-in user
 const getUserOrders = async (req, res) => {
   try {
