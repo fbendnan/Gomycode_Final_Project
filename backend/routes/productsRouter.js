@@ -3,8 +3,10 @@ const {
   getProducts,
   getProductById,
   updateProduct,
-  deleteProduct
+  deleteProduct,
 } = require("../controllers/productController.js");
+const express = require("express");
+const Product = require("../models/product.js");
 
 const productsRouter = express.Router();
 
@@ -14,13 +16,13 @@ productsRouter.get("/", getProducts);
 // Get single product
 productsRouter.get("/:id", getProductById);
 
-// Create product (protected - admin)
+// Create product
 productsRouter.post("/", createProduct);
 
-// Update product (protected - admin)
+// Update product 
 productsRouter.put("/:id", updateProduct);
 
-// Delete product (protected - admin)
+// Delete product 
 productsRouter.delete("/:id", deleteProduct);
 
 module.exports = productsRouter;

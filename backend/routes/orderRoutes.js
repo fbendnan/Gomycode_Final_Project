@@ -2,11 +2,12 @@ const express = require("express");
 const router = express.Router();
 const { createOrder, getUserOrders, getAllOrders } = require("../controllers/orderController");
 
-// User routes
-router.post("/", protect, createOrder);
-router.get("/", protect, getUserOrders);
+// User route
+console.log(createOrder);
+router.post("/", createOrder);
+router.get("/", getUserOrders);
 
-// Admin / Brand route (optional)
+// Admin route 
 router.get("/all", getAllOrders);
 
 module.exports = router;

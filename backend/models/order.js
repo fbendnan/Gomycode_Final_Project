@@ -16,7 +16,7 @@ const OrderSchema = new mongoose.Schema({
   },
   paymentMethod: { 
     type: String, 
-    enum: ["card", "paypal", "cash_on_delivery"], 
+    enum: ["card", "paypal", "cash_on_delivery"],
     required: true 
   },
   shippingAddress: {
