@@ -1,3 +1,4 @@
+const express = require("express");
 const {
   createProduct,
   getProducts,
@@ -5,8 +6,9 @@ const {
   updateProduct,
   deleteProduct,
 } = require("../controllers/productController.js");
-const express = require("express");
-const Product = require("../models/product.js");
+
+const { protect, authorize } = require("../middleware/authMiddleware");
+const { upload } = require("../config/cloudinary.js");
 
 const productsRouter = express.Router();
 
@@ -14,15 +16,16 @@ const productsRouter = express.Router();
 productsRouter.get("/", getProducts);
 
 // Get single product
-productsRouter.get("/:id", getProductById);
+productsRouter.get("/:id",protect, getProductById);
 
 // Create product
-productsRouter.post("/", createProduct);
+productsRouter.post("/",protect, authorize("adim"), upload.single("image"), createProduct);
 
-// Update product 
-productsRouter.put("/:id", updateProduct);
+// Update product
+productsRouter.put("/:id",protect, authorize("admin"), upload.single("image"), updateProduct);
 
-// Delete product 
-productsRouter.delete("/:id", deleteProduct);
+// Delete product
+productsRouter.delete("/:id",protect, authorize("admin"), deleteProduct);
 
 module.exports = productsRouter;
+

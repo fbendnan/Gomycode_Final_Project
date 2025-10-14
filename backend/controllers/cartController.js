@@ -1,11 +1,11 @@
 const Cart = require("../models/cart");
 //temporary user ID  
-const userID = "68e3f81b770e6ef1f0c8b6e7";
+// const userID = "68e3f81b770e6ef1f0c8b6e7";
 
 // Get cart for logged-in user
 const getCart = async (req, res) => {
   try {
-
+    const userID = req.user.id; // get logged-in user
     const cart = await Cart.findOne({ user: userID }).populate("products.product");
     if (!cart) return res.json({ items: [] });
     res.json(cart);

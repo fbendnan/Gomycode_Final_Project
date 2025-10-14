@@ -6,16 +6,13 @@ const createReview = async (req, res) => {
   try {
     const { productId, rating, comment } = req.body;
 
-    // Check if product exists
     const product = await Product.findById(productId);
     if (!product) return res.status(404).json({ message: "Product not found" });
 
-    // Check if user already reviewed this product
     const existingReview = await Review.findOne({
       user: req.user.id,
       product: productId,
     });
-
     if (existingReview) {
       return res.status(400).json({ message: "You already reviewed this product" });
     }
@@ -47,19 +44,11 @@ const getProductReviews = async (req, res) => {
   }
 };
 
-// Update a review (only the user who wrote it)
+// Update a review (ownership handled by middleware)
 const updateReview = async (req, res) => {
   try {
-    const { id } = req.params; // review id
     const { rating, comment } = req.body;
-
-    const review = await Review.findById(id);
-    if (!review) return res.status(404).json({ message: "Review not found" });
-
-    // check owner
-    if (review.user.toString() !== req.user.id) {
-      return res.status(403).json({ message: "Not authorized" });
-    }
+    const review = req.resource; // comes from checkOwnership middleware
 
     review.rating = rating || review.rating;
     review.comment = comment || review.comment;
@@ -72,19 +61,10 @@ const updateReview = async (req, res) => {
   }
 };
 
-// Delete a review (only user or admin)
+// Delete a review (ownership handled by middleware)
 const deleteReview = async (req, res) => {
   try {
-    const { id } = req.params;
-
-    const review = await Review.findById(id);
-    if (!review) return res.status(404).json({ message: "Review not found" });
-
-    // only owner or admin can delete
-    if (review.user.toString() !== req.user.id && req.user.role !== "admin") {
-      return res.status(403).json({ message: "Not authorized" });
-    }
-
+    const review = req.resource; // comes from checkOwnership middleware
     await review.deleteOne();
     res.json({ message: "Review deleted successfully" });
   } catch (error) {

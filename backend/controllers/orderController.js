@@ -1,53 +1,31 @@
 const Order = require("../models/order");
 const Cart = require("../models/cart");
 
-// temporary user ID for testing
-const userID = "68e3f81b770e6ef1f0c8b6e7";
-
 // Create an order
 const createOrder = async (req, res) => {
   try {
-    const cart = await Cart.findOne({ user: userID }).populate({
-      path: 'products.product',
-      model: 'Product'
-    });
+    const userID = req.user.id; // get logged-in user
+    const cart = await Cart.findOne({ user: userID }).populate("items.product");
 
-    if (!cart) {
-      return res.status(400).json({ message: "Cart not found" });
+    if (!cart || cart.items.length === 0) {
+      return res.status(400).json({ message: cart ? "Cart is empty" : "Cart not found" });
     }
-
-    if (cart.products.length === 0) {
-      return res.status(400).json({ message: "Cart is empty" });
-    }
-
-    // Debug: Log cart products to check population
-    console.log("Cart products:", cart.products);
-
-    // Calculate total price with validation
-    const totalPrice = cart.products.reduce((acc, item) => {
-      if (!item.product) {
-        console.error("Product not found for item:", item);
-        return acc;
-      }
-      if (typeof item.product.price !== 'number') {
-        console.error("Invalid price for product:", item.product);
-        return acc;
-      }
-      return acc + (item.product.price * item.quantity);
-    }, 0);
 
     const { paymentMethod, shippingAddress } = req.body;
-
-    // Create order with validation
     if (!paymentMethod || !shippingAddress) {
-      return res.status(400).json({
-        message: "Payment method and shipping address are required"
-      });
+      return res.status(400).json({ message: "Payment method and shipping address are required" });
     }
 
+    // Calculate total price
+    const totalPrice = cart.items.reduce((acc, item) => {
+      if (!item.product || typeof item.product.price !== "number") return acc;
+      return acc + item.product.price * item.quantity;
+    }, 0);
+
+    // Create order
     const order = await Order.create({
       user: userID,
-      products: cart.products.map((item) => ({
+      products: cart.items.map(item => ({
         product: item.product._id,
         quantity: item.quantity,
       })),
@@ -56,22 +34,21 @@ const createOrder = async (req, res) => {
       shippingAddress,
     });
 
-    // Clear user cart after checkout
-    cart.products = [];
+    // Clear the cart
+    cart.items = [];
     await cart.save();
 
     res.status(201).json({ message: "Order created successfully", order });
   } catch (error) {
     console.error("Error creating order:", error);
-    res.status(500).json({
-      message: "Error creating order",
-      error: error.message
-    });
+    res.status(500).json({ message: "Error creating order", error: error.message });
   }
 };
-// Get all orders for the logged-in user
+
+// Get all orders for logged-in user
 const getUserOrders = async (req, res) => {
   try {
+    const userID = req.user.id;
     const orders = await Order.find({ user: userID }).populate("products.product");
     res.json(orders);
   } catch (error) {
@@ -79,10 +56,11 @@ const getUserOrders = async (req, res) => {
   }
 };
 
-// Get all orders (admin)
+// Get all orders (admin only)
 const getAllOrders = async (req, res) => {
   try {
-    const orders = await Order.find().populate("user", "email");
+    // You can add a role check here if you want
+    const orders = await Order.find().populate("user", "name email").populate("products.product");
     res.json(orders);
   } catch (error) {
     res.status(500).json({ message: error.message });

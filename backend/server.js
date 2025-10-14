@@ -6,6 +6,7 @@ const categoryRouter = require("./routes/categoryRoutes.js");
 const reviewRouter = require("./routes/reviewRoutes.js");
 const cartRouter = require("./routes/cartRoutes.js");
 const orderRouter = require("./routes/orderRoutes.js");
+const cors = require('cors');
 
 connectdb();
 require("dotenv").config();
@@ -13,6 +14,8 @@ require("dotenv").config();
 const app = express();
 
 app.use(express.json());
+app.use(cors());
+
 
 app.use("/api/reviews", reviewRouter);
 app.use("/api/cart", cartRouter);

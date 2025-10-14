@@ -1,31 +1,47 @@
-const Product = require("../models/product.js")
+const { cloudinary } = require("../config/cloudinary.js");
+const Product = require("../models/product.js");
+const { upload } = require("../config/cloudinary.js");
 
-// Create product
+
+// CREATE product with image upload
 const createProduct = async (req, res) => {
   try {
-    // 1. Extract data from req.body
-    const { name, description, price, stock, images } = req.body;
+    const { name, description, price, stock, category } = req.body;
 
-    // 2. Validation (optional, you can add more)
     if (!name || !description || !price || !stock) {
       return res.status(400).json({ message: "All fields are required" });
     }
 
-    // 3. Create the product
-    const product = new Product({ name, description, price, stock, images });
-    await product.save();
+    let imageData = {};
+    if (req.file) {
+      const result = await cloudinary.uploader.upload(req.file.path, {
+        folder: "products",
+      });
+      imageData = {
+        url: result.secure_url,
+        public_id: result.public_id,
+      };
+    }
 
-    // 4. Respond
+    const product = new Product({
+      name,
+      description,
+      price,
+      stock,
+      category,
+      images: imageData,
+    });
+
+    await product.save();
     res.status(201).json(product);
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
 };
 
-// Get all products
+// READ - Get all products
 const getProducts = async (req, res) => {
   try {
-    // TODO: add pagination, filtering, sorting if needed
     const products = await Product.find();
     res.json(products);
   } catch (error) {
@@ -33,37 +49,67 @@ const getProducts = async (req, res) => {
   }
 };
 
-// Get single product by ID
+// READ - Get one product by ID
 const getProductById = async (req, res) => {
   try {
     const product = await Product.findById(req.params.id);
-    if (!product) return res.status(404).json({ message: "Product not found" });
+    if (!product)
+      return res.status(404).json({ message: "Product not found" });
     res.json(product);
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
 };
 
-// Update product
+// UPDATE product + update image if new file uploaded
 const updateProduct = async (req, res) => {
   try {
-    const updated = await Product.findByIdAndUpdate(
-      req.params.id,
-      req.body, // partial update
-      { new: true, runValidators: true } // return updated doc
-    );
-    if (!updated) return res.status(404).json({ message: "Product not found" });
+    const { name, description, price, stock, category } = req.body;
+    const product = await Product.findById(req.params.id);
+
+    if (!product)
+      return res.status(404).json({ message: "Product not found" });
+
+    // delete old image if new one uploaded
+    if (req.file) {
+      if (product.images?.public_id) {
+        await cloudinary.uploader.destroy(product.images.public_id);
+      }
+
+      const result = await cloudinary.uploader.upload(req.file.path, {
+        folder: "products",
+      });
+      product.images = {
+        url: result.secure_url,
+        public_id: result.public_id,
+      };
+    }
+
+    product.name = name || product.name;
+    product.description = description || product.description;
+    product.price = price || product.price;
+    product.stock = stock || product.stock;
+    product.category = category || product.category;
+
+    const updated = await product.save();
     res.json(updated);
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
 };
 
-// Delete product
+// DELETE product + remove image from Cloudinary
 const deleteProduct = async (req, res) => {
   try {
-    const deleted = await Product.findByIdAndDelete(req.params.id);
-    if (!deleted) return res.status(404).json({ message: "Product not found" });
+    const product = await Product.findById(req.params.id);
+    if (!product)
+      return res.status(404).json({ message: "Product not found" });
+
+    if (product.images?.public_id) {
+      await cloudinary.uploader.destroy(product.images.public_id);
+    }
+
+    await product.deleteOne();
     res.json({ message: "Product deleted successfully" });
   } catch (error) {
     res.status(500).json({ message: error.message });
@@ -75,5 +121,6 @@ module.exports = {
   getProducts,
   getProductById,
   updateProduct,
-  deleteProduct 
+  deleteProduct,
 };
+
