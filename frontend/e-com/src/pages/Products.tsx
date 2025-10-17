@@ -8,9 +8,9 @@ type Product = {
   price: number;
   oldPrice?: number;
   description: string;
-// images: {
-    //   url: string;
-    //   public_id: string;}
+images: {
+      url: string;
+      public_id: string;}
 };
 
 const Products = () => {

@@ -9,13 +9,11 @@ import ThreeProducts from "../components/products/threePrpducts";
 export default function Home() {
   return (
     <>
-      <Navbar />
       <Hero />
       <Features />
       <ThreeProducts />
       {/* <Collection /> */}
       {/* <Products /> */}
-      <Footer />
     </>
   );
 }

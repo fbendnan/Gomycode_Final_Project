@@ -5,13 +5,16 @@ type ProductProps = {
     price: number;
     oldPrice?: number;
     description: string;
+    images: {
+      url: string;
+      public_id: string;
+    };
   };
 };
 
 export default function ProductCard({ product }: ProductProps) {
   return (
     <div className="relative flex flex-col overflow-hidden transition-all duration-300 border shadow-sm border-brand-3 group rounded-2xl bg-gradient-to-b from-brand-4 to-brand-3 hover:-translate-y-1 hover:shadow-xl">
-      
       {/* Wishlist Button */}
       <button className="absolute z-10 p-2 transition rounded-full text-brand-3 right-4 top-4 bg-white/80 backdrop-blur-sm hover:bg-brand-1 hover:text-white">
         <span className="sr-only">Add to wishlist</span>
@@ -35,7 +38,11 @@ export default function ProductCard({ product }: ProductProps) {
       <div className="relative overflow-hidden">
         {/* Placeholder image */}
         <div className="flex items-center justify-center w-full h-64 text-6xl bg-gradient-to-br from-brand-4 to-brand-2">
-          🧴
+          <img
+            src={product.images.url}
+            alt={product.name}
+            className="object-cover w-full h-64 transition duration-500 group-hover:scale-105 sm:h-72"
+          />
         </div>
         <div className="absolute inset-0 transition bg-black/0 group-hover:bg-black/10" />
       </div>
@@ -46,12 +53,16 @@ export default function ProductCard({ product }: ProductProps) {
           <h3 className="text-lg font-semibold transition text-brand-1 group-hover:text-brand-2">
             {product.name}
           </h3>
-          <p className="mt-2 text-sm text-brand-2 line-clamp-2">{product.description}</p>
+          <p className="mt-2 text-sm text-brand-2 line-clamp-2">
+            {product.description}
+          </p>
         </div>
 
         <div className="flex items-center justify-between mt-4">
           <div>
-            <p className="text-xl font-bold text-brand-1">${product.price.toFixed(2)}</p>
+            <p className="text-xl font-bold text-brand-1">
+              ${product.price.toFixed(2)}
+            </p>
             {product.oldPrice && (
               <p className="text-sm line-through text-brand-3">
                 ${product.oldPrice.toFixed(2)}
@@ -72,4 +83,3 @@ export default function ProductCard({ product }: ProductProps) {
     </div>
   );
 }
-
